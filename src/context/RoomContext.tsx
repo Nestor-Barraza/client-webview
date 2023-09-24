@@ -109,8 +109,8 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
 
     useEffect(() => {
         const peer = new Peer(userId, {
-            host: "localhost",
-            port: 9001,
+            host: "https://peer-qvf4.onrender.com",
+            port: 443,
         });
         setMe(peer);
 
