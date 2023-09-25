@@ -23,7 +23,6 @@ interface RoomValue {
     stream?: MediaStream;
     screenStream?: MediaStream;
     peers: PeerState;
-    shareScreen: () => void;
     roomId: string;
     setRoomId: (id: string) => void;
     screenSharingId: string;
@@ -31,8 +30,7 @@ interface RoomValue {
 
 export const RoomContext = createContext<RoomValue>({
     peers: {},
-    shareScreen: () => {},
-    setRoomId: (id) => {},
+    setRoomId: (id) => { },
     screenSharingId: "",
     roomId: "",
 });
@@ -66,32 +64,9 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         dispatch(removePeerStreamAction(peerId));
     };
 
-    const switchStream = (stream: MediaStream) => {
-        setScreenSharingId(me?.id || "");
-        Object.values(me?.connections).forEach((connection: any) => {
-            const videoTrack: any = stream
-                ?.getTracks()
-                .find((track) => track.kind === "video");
-            connection[0].peerConnection
-                .getSenders()
-                .find((sender: any) => sender.track.kind === "video")
-                .replaceTrack(videoTrack)
-                .catch((err: any) => console.error(err));
-        });
-    };
+  
 
-    const shareScreen = () => {
-        if (screenSharingId) {
-            navigator.mediaDevices
-                .getUserMedia({ video: true, audio: true })
-                .then(switchStream);
-        } else {
-            navigator.mediaDevices.getDisplayMedia({}).then((stream) => {
-                switchStream(stream);
-                setScreenStream(stream);
-            });
-        }
-    };
+    
 
     const nameChangedHandler = ({
         peerId,
@@ -155,7 +130,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     useEffect(() => {
         if (!me) return;
         if (!stream) return;
-        ws.on("user-joined", ({ peerId, userName: name }) => {
+      /*   ws.on("user-joined", ({ peerId, userName: name }) => {
             const call = me.call(peerId, stream, {
                 metadata: {
                     userName,
@@ -165,7 +140,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
                 dispatch(addPeerStreamAction(peerId, peerStream));
             });
             dispatch(addPeerNameAction(peerId, name));
-        });
+        }); */
 
         me.on("call", (call) => {
             const { userName } = call.metadata;
@@ -188,7 +163,6 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
                 stream,
                 screenStream,
                 peers,
-                shareScreen,
                 roomId,
                 setRoomId,
                 screenSharingId,
