@@ -29,8 +29,7 @@ export const Room = () => {
     }, [id, setRoomId]);
 
       
-      
-    }      
+       
     /*    const screenSharingVideo =
            screenSharingId === userId
                ? screenStream
