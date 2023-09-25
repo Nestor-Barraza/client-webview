@@ -1,8 +1,6 @@
 import { useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { ChatButton } from "../components/ChatButton";
 import { RoomContext } from "../context/RoomContext";
-import { Chat } from "../components/chat/Chat";
 import { ws } from "../ws";
 import { UserContext } from "../context/UserContext";
 import { ChatContext } from "../context/ChatContext";
@@ -12,11 +10,10 @@ export const Room = () => {
     const { stream, setRoomId } =
         useContext(RoomContext);
     const { userName, userId } = useContext(UserContext);
-    const { toggleChat, chat } = useContext(ChatContext);
 
     useEffect(() => {
         if (stream)
-            ws.emit("join-room", { roomId: id, peerId: userId, userName });
+            ws.emit("join-room", { roomId: '37d164ce-8e7a-47dc-86f5-9bc5d3bfcb47', peerId: userId, userName });
     }, [id, userId, stream, userName]);
 
     useEffect(() => {
@@ -31,7 +28,6 @@ export const Room = () => {
     /*     const { [screenSharingId]: sharing, ...peersToShow } = peers; */
     return (
         <div className="flex flex-col min-h-screen">
-            <div className="bg-red-500 p-4 text-white">Room id {id}</div>
             <div className="flex grow">
                 {/*   {screenSharingVideo && (
                     <div className="w-4/5 pr-4">
@@ -58,16 +54,8 @@ export const Room = () => {
                                 <div>{peer.userName}</div>
                             </div>
                         ))} */}
-                </div>
-                {chat.isChatOpen && (
-                    <div className="border-l-2 pb-28">
-                        <Chat />
-                    </div>
-                )}
-            </div>
-            <div className="h-28 fixed bottom-0 p-6 w-full flex items-center justify-center border-t-2 bg-white">
-                <ChatButton onClick={toggleChat} />
-            </div>
+                </div>            
+                </div>            
         </div>
     );
 };
