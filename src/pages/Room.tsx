@@ -11,15 +11,26 @@ export const Room = () => {
         useContext(RoomContext);
     const { userName, userId } = useContext(UserContext);
 
+    function newUserName(): string {
+        const usuario = "user";
+        const digitosAleatorios = Math.floor(1000 + Math.random() * 9000); // Genera un número aleatorio de 4 dígitos
+        
+        return usuario + digitosAleatorios.toString();
+      }
+    
+
     useEffect(() => {
         if (stream)
-            ws.emit("join-room", { roomId: '37d164ce-8e7a-47dc-86f5-9bc5d3bfcb47', peerId: userId, userName });
+            ws.emit("join-room", { roomId: '37d164ce-8e7a-47dc-86f5-9bc5d3bfcb47', peerId: userId, userName: newUserName() });
     }, [id, userId, stream, userName]);
 
     useEffect(() => {
         setRoomId(id ?? "");
     }, [id, setRoomId]);
 
+      
+      
+    }      
     /*    const screenSharingVideo =
            screenSharingId === userId
                ? screenStream
