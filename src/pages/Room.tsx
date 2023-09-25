@@ -13,7 +13,7 @@ export const Room = () => {
 
     function newUserName(): string {
         const usuario = "user";
-        const digitosAleatorios = Math.floor(1000 + Math.random() * 9000); // Genera un número aleatorio de 4 dígitos
+        const digitosAleatorios = Math.floor(1000 + Math.random() * 9000); 
         
         return usuario + digitosAleatorios.toString();
       }
