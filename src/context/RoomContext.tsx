@@ -35,7 +35,7 @@ export const RoomContext = createContext<RoomValue>({
     roomId: "",
 });
 
-if (window.Cypress) {
+if (!!window.Cypress) {
     window.Peer = Peer;
 }
 
@@ -130,7 +130,17 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     useEffect(() => {
         if (!me) return;
         if (!stream) return;
-      
+      /*   ws.on("user-joined", ({ peerId, userName: name }) => {
+            const call = me.call(peerId, stream, {
+                metadata: {
+                    userName,
+                },
+            });
+            call.on("stream", (peerStream) => {
+                dispatch(addPeerStreamAction(peerId, peerStream));
+            });
+            dispatch(addPeerNameAction(peerId, name));
+        }); */
 
         me.on("call", (call) => {
             const { userName } = call.metadata;
