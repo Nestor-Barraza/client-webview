@@ -1,4 +1,10 @@
-import { createContext, useEffect, useState, useReducer, useContext, useMemo } from "react";
+import {
+    createContext,
+    useEffect,
+    useState,
+    useReducer,
+    useContext,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
 import { ws } from "../ws";
@@ -57,6 +63,10 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const removePeer = (peerId: string) => {
         dispatch(removePeerStreamAction(peerId));
     };
+
+  
+
+    
 
     const nameChangedHandler = ({
         peerId,
@@ -120,6 +130,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     useEffect(() => {
         if (!me) return;
         if (!stream) return;
+      
 
         me.on("call", (call) => {
             const { userName } = call.metadata;
@@ -130,22 +141,23 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             });
         });
 
+
         return () => {
             ws.off("user-joined");
         };
     }, [me, stream, userName]);
 
-    const contextValue = useMemo(() => ({
-        stream,
-        screenStream,
-        peers,
-        roomId,
-        setRoomId,
-        screenSharingId,
-    }), [stream, screenStream, peers, roomId, setRoomId, screenSharingId]);
-
     return (
-        <RoomContext.Provider value={contextValue}>
+        <RoomContext.Provider
+            value={{
+                stream,
+                screenStream,
+                peers,
+                roomId,
+                setRoomId,
+                screenSharingId,
+            }}
+        >
             {children}
         </RoomContext.Provider>
     );
