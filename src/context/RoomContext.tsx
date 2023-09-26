@@ -38,7 +38,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const { userName, userId } = useContext(UserContext);
     const [me, setMe] = useState<Peer>();
     const [stream, setStream] = useState<MediaStream>();
-    const [screenStream] = useState<MediaStream>();
+    const [screenStream, setScreenStream] = useState<MediaStream>();
     const [peers, dispatch] = useReducer(peersReducer, {});
     const [screenSharingId, setScreenSharingId] = useState<string>("");
     const [roomId, setRoomId] = useState<string>("");
@@ -73,22 +73,21 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     }, [userName, userId, roomId]);
 
     useEffect(() => {
-        const setupMediaStream = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                setStream(stream);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-
-        setupMediaStream();
-
         const peer = new Peer(userId, {
             host: "peer-qvf4.onrender.com",
             port: 443,
         });
         setMe(peer);
+
+        try {
+            navigator.mediaDevices
+                .getUserMedia({ video: true, audio: true })
+                .then((stream) => {
+                    setStream(stream);
+                });
+        } catch (error) {
+            console.error(error);
+        }
 
         ws.on("room-created", enterRoom);
         ws.on("get-users", getUsers);
