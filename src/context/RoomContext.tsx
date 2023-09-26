@@ -1,10 +1,4 @@
-import {
-    createContext,
-    useEffect,
-    useState,
-    useReducer,
-    useContext,
-} from "react";
+import { createContext, useEffect, useState, useReducer, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
 import { ws } from "../ws";
@@ -35,7 +29,7 @@ export const RoomContext = createContext<RoomValue>({
     roomId: "",
 });
 
-if (!!window.Cypress) {
+if (window.Cypress) {
     window.Peer = Peer;
 }
 
@@ -44,7 +38,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const { userName, userId } = useContext(UserContext);
     const [me, setMe] = useState<Peer>();
     const [stream, setStream] = useState<MediaStream>();
-    const [screenStream, setScreenStream] = useState<MediaStream>();
+    const [screenStream] = useState<MediaStream>();
     const [peers, dispatch] = useReducer(peersReducer, {});
     const [screenSharingId, setScreenSharingId] = useState<string>("");
     const [roomId, setRoomId] = useState<string>("");
@@ -64,10 +58,6 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         dispatch(removePeerStreamAction(peerId));
     };
 
-  
-
-    
-
     const nameChangedHandler = ({
         peerId,
         userName,
@@ -83,21 +73,22 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     }, [userName, userId, roomId]);
 
     useEffect(() => {
+        const setupMediaStream = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                setStream(stream);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        setupMediaStream();
+
         const peer = new Peer(userId, {
             host: "peer-qvf4.onrender.com",
             port: 443,
         });
         setMe(peer);
-
-        try {
-            navigator.mediaDevices
-                .getUserMedia({ video: true, audio: true })
-                .then((stream) => {
-                    setStream(stream);
-                });
-        } catch (error) {
-            console.error(error);
-        }
 
         ws.on("room-created", enterRoom);
         ws.on("get-users", getUsers);
@@ -130,17 +121,6 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     useEffect(() => {
         if (!me) return;
         if (!stream) return;
-      /*   ws.on("user-joined", ({ peerId, userName: name }) => {
-            const call = me.call(peerId, stream, {
-                metadata: {
-                    userName,
-                },
-            });
-            call.on("stream", (peerStream) => {
-                dispatch(addPeerStreamAction(peerId, peerStream));
-            });
-            dispatch(addPeerNameAction(peerId, name));
-        }); */
 
         me.on("call", (call) => {
             const { userName } = call.metadata;
@@ -151,23 +131,22 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             });
         });
 
-
         return () => {
             ws.off("user-joined");
         };
     }, [me, stream, userName]);
 
+    const contextValue = useMemo(() => ({
+        stream,
+        screenStream,
+        peers,
+        roomId,
+        setRoomId,
+        screenSharingId,
+    }), [stream, screenStream, peers, roomId, setRoomId, screenSharingId]);
+
     return (
-        <RoomContext.Provider
-            value={{
-                stream,
-                screenStream,
-                peers,
-                roomId,
-                setRoomId,
-                screenSharingId,
-            }}
-        >
+        <RoomContext.Provider value={contextValue}>
             {children}
         </RoomContext.Provider>
     );
