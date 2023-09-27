@@ -76,28 +76,37 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     useEffect(() => {
         const setupMediaStream = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const constraints = {
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        frameRate: { ideal: 25 }
+                    },
+                    audio: true,
+                };
+    
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 setStream(stream);
             } catch (error) {
                 console.error(error);
             }
         };
-
+    
         setupMediaStream();
-
+    
         const peer = new Peer(userId, {
             host: "peer-qvf4.onrender.com",
             port: 443,
         });
         setMe(peer);
-
+    
         ws.on("room-created", enterRoom);
         ws.on("get-users", getUsers);
         ws.on("user-disconnected", removePeer);
         ws.on("user-started-sharing", (peerId) => setScreenSharingId(peerId));
         ws.on("user-stopped-sharing", () => setScreenSharingId(""));
         ws.on("name-changed", nameChangedHandler);
-
+    
         return () => {
             ws.off("room-created");
             ws.off("get-users");
@@ -110,6 +119,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+    
 
     useEffect(() => {
         if (screenSharingId) {
