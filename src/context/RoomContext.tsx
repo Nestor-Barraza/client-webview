@@ -136,17 +136,15 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         };
     }, [me, stream, userName]);
 
-    const contextValue = useMemo(() => ({
-        stream,
-        screenStream,
-        peers,
-        roomId,
-        setRoomId,
-        screenSharingId,
-    }), [stream, screenStream, peers, roomId, setRoomId, screenSharingId]);
-
     return (
-        <RoomContext.Provider value={contextValue}>
+        <RoomContext.Provider value={{
+            stream,
+            screenStream,
+            peers,
+            roomId,
+            setRoomId,
+            screenSharingId,
+        }}>
             {children}
         </RoomContext.Provider>
     );
