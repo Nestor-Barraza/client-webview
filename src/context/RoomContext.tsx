@@ -23,7 +23,9 @@ interface RoomValue {
 }
 
 function getUserName(token: string, calledBy: string): string {
+    console.log({token, calledBy})
     const payload = parseJwt(token)
+    console.log({payload})
     const usuario = payload.email
     return usuario
 }
