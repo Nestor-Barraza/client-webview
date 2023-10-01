@@ -46,6 +46,7 @@ const customRender = (ui, providerProps = {}) => {
             },
             setRoomId: () => {},
             roomId: "q",
+            emitStreaming: () => {},
             token: "t",
             setToken: () => {},
         },

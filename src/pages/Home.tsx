@@ -26,9 +26,7 @@ export const Home = () => {
     }, [token])
     
     useEffect(() => {
-        console.log({firebaseToken});
         if (firebaseToken) {
-            console.log({firebaseToken});
             
             const url = process.env.REACT_APP_SERVER || "https://server-3j0t.onrender.com:443";
             axios.post(`${url}/auth/login`, {}, {
@@ -36,16 +34,14 @@ export const Home = () => {
                     Authorization: firebaseToken
                 }
             }).then(response => {
-                console.log(response)
                 const data: LoginData = response.data
                 setToken(data.token)
-            }).catch(console.log)
+            }).catch(console.error)
         }
     }, [firebaseToken, setToken]) 
 
     useEffect(() => {
         if (token) {
-            console.log({createRoomToken: token});
             createRoom()
         }
     }, [token, createRoom, setToken]) 

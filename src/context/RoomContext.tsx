@@ -10,20 +10,29 @@ import {
 } from "../reducers/peerActions";
 
 import { UserContext } from "./UserContext";
+import { Roles, parseJwt } from "../utils/parseJwt";
 
 interface RoomValue {
     stream?: MediaStream;
     peers: PeerState;
     roomId: string;
     setRoomId: (id: string) => void;
+    emitStreaming: () => void;
     token: string
     setToken: (token: string) => void;
+}
+
+function getUserName(token: string, calledBy: string): string {
+    const payload = parseJwt(token)
+    const usuario = payload.email
+    return usuario
 }
 
 export const RoomContext = createContext<RoomValue>({
     peers: {},
     setRoomId: (id) => { },
     roomId: "",
+    emitStreaming: () => { },
     token: "",
     setToken: (token) => { },
 });
@@ -43,12 +52,29 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const [token, setToken] = useState("")
 
     const enterRoom = ({ roomId }: { roomId: "string" }) => {
+        setRoomId(roomId)
         navigate(`/room/${roomId}`);
     };
 
     const removePeer = (peerId: string) => {
         dispatch(removePeerStreamAction(peerId));
     };
+
+    const emitStreaming = () => {
+        localStorage.setItem("token", token)
+        localStorage.setItem("roomId", roomId)
+        localStorage.setItem("peerId", userId)
+        ws.emit("join-room", { roomId, peerId: userId, userName: getUserName(token, "ws.emit"), token });
+    }
+
+    const reemitStreaming = () => {
+        const token = localStorage.getItem("token")
+        const roomId = localStorage.getItem("roomId")
+        const peerId = localStorage.getItem("peerId")
+        if (token) {
+            ws.emit("join-room", { roomId, peerId, userName: getUserName(token, "ws.emitRE"), token })
+        }
+    }
 
     useEffect(() => {
         const setupMediaStream = async () => {
@@ -69,11 +95,13 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         setMe(peer);
 
         ws.on("room-created", enterRoom);
+        ws.on("emit-streaming", reemitStreaming);
         ws.on("user-disconnected", removePeer);
         ws.on("error", console.error)
 
         return () => {
             ws.off("room-created");
+            ws.off("emit-streaming");
             ws.off("user-disconnected");
             ws.off("error");
             me?.disconnect();
@@ -102,6 +130,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             peers,
             roomId,
             setRoomId,
+            emitStreaming,
             token,
             setToken,
         }}>
