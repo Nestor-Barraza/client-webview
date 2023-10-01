@@ -44,10 +44,10 @@ const customRender = (ui, providerProps = {}) => {
                     peerId: "qwwe",
                 },
             },
-            screenSharingId: "",
-            shareScreen: () => {},
             setRoomId: () => {},
             roomId: "q",
+            token: "t",
+            setToken: () => {},
         },
     };
     const props = { ...defaultProps, ...providerProps };

@@ -3,25 +3,23 @@ import { useParams } from "react-router-dom";
 import { RoomContext } from "../context/RoomContext";
 import { ws } from "../ws";
 import { UserContext } from "../context/UserContext";
+import { parseJwt } from "../utils/parseJwt";
+
+function newUserName(token: string): string {
+    const payload = parseJwt(token)
+    const usuario = payload.email
+    return usuario
+}
 
 export const Room = () => {
     const { id } = useParams();
-    const { stream, setRoomId } =
-        useContext(RoomContext);
+    const { stream, setRoomId, token } = useContext(RoomContext);
     const { userName, userId } = useContext(UserContext);
-
-    function newUserName(): string {
-        const usuario = "user";
-        const digitosAleatorios = Math.floor(1000 + Math.random() * 9000); 
-        
-        return usuario + digitosAleatorios.toString();
-      }
-    
 
     useEffect(() => {
         if (stream)
-            ws.emit("join-room", { roomId: '37d164ce-8e7a-47dc-86f5-9bc5d3bfcb47', peerId: userId, userName: newUserName() });
-    }, [id, userId, stream, userName]);
+            ws.emit("join-room", { roomId: id, peerId: userId, userName: newUserName(token), token });
+    }, [id, userId, stream, userName, token]);
 
     useEffect(() => {
         setRoomId(id ?? "");

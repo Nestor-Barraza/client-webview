@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, useReducer, useContext, useMemo } from "react";
+import { createContext, useEffect, useState, useReducer, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Peer from "peerjs";
 import { ws } from "../ws";
@@ -7,26 +7,25 @@ import {
     addPeerStreamAction,
     addPeerNameAction,
     removePeerStreamAction,
-    addAllPeersAction,
 } from "../reducers/peerActions";
 
 import { UserContext } from "./UserContext";
-import { IPeer } from "../types/peer";
 
 interface RoomValue {
     stream?: MediaStream;
-    screenStream?: MediaStream;
     peers: PeerState;
     roomId: string;
     setRoomId: (id: string) => void;
-    screenSharingId: string;
+    token: string
+    setToken: (token: string) => void;
 }
 
 export const RoomContext = createContext<RoomValue>({
     peers: {},
     setRoomId: (id) => { },
-    screenSharingId: "",
     roomId: "",
+    token: "",
+    setToken: (token) => { },
 });
 
 if (!!window.Cypress) {
@@ -39,39 +38,17 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
     const { userName, userId } = useContext(UserContext);
     const [me, setMe] = useState<Peer>();
     const [stream, setStream] = useState<MediaStream>();
-    const [screenStream, setScreenStream] = useState<MediaStream>();
     const [peers, dispatch] = useReducer(peersReducer, {});
-    const [screenSharingId, setScreenSharingId] = useState<string>("");
     const [roomId, setRoomId] = useState<string>("");
+    const [token, setToken] = useState("")
 
     const enterRoom = ({ roomId }: { roomId: "string" }) => {
         navigate(`/room/${roomId}`);
-    };
-    const getUsers = ({
-        participants,
-    }: {
-        participants: Record<string, IPeer>;
-    }) => {
-        dispatch(addAllPeersAction(participants));
     };
 
     const removePeer = (peerId: string) => {
         dispatch(removePeerStreamAction(peerId));
     };
-
-    const nameChangedHandler = ({
-        peerId,
-        userName,
-    }: {
-        peerId: string;
-        userName: string;
-    }) => {
-        dispatch(addPeerNameAction(peerId, userName));
-    };
-
-    useEffect(() => {
-        ws.emit("change-name", { peerId: userId, userName, roomId });
-    }, [userName, userId, roomId]);
 
     useEffect(() => {
         const setupMediaStream = async () => {
@@ -86,38 +63,23 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         setupMediaStream();
 
         const peer = new Peer(userId, {
-            host: "peer-qvf4.onrender.com",
-            port: 443,
+            host: process.env.REACT_APP_PEER_SERVER || "peer-qvf4.onrender.com",
+            port: Number(process.env.REACT_APP_PEER_PORT) || 443,
         });
         setMe(peer);
 
         ws.on("room-created", enterRoom);
-        ws.on("get-users", getUsers);
         ws.on("user-disconnected", removePeer);
-        ws.on("user-started-sharing", (peerId) => setScreenSharingId(peerId));
-        ws.on("user-stopped-sharing", () => setScreenSharingId(""));
-        ws.on("name-changed", nameChangedHandler);
+        ws.on("error", console.error)
 
         return () => {
             ws.off("room-created");
-            ws.off("get-users");
             ws.off("user-disconnected");
-            ws.off("user-started-sharing");
-            ws.off("user-stopped-sharing");
-            ws.off("user-joined");
-            ws.off("name-changed");
+            ws.off("error");
             me?.disconnect();
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-
-    useEffect(() => {
-        if (screenSharingId) {
-            ws.emit("start-sharing", { peerId: screenSharingId, roomId });
-        } else {
-            ws.emit("stop-sharing");
-        }
-    }, [screenSharingId, roomId]);
 
     useEffect(() => {
         if (!me) return;
@@ -132,19 +94,16 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
             });
         });
 
-        return () => {
-            ws.off("user-joined");
-        };
     }, [me, stream, userName]);
 
     return (
         <RoomContext.Provider value={{
             stream,
-            screenStream,
             peers,
             roomId,
             setRoomId,
-            screenSharingId,
+            token,
+            setToken,
         }}>
             {children}
         </RoomContext.Provider>
