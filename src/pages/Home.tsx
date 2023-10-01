@@ -35,6 +35,7 @@ export const Home = () => {
                 }
             }).then(response => {
                 const data: LoginData = response.data
+                console.log({parityData: data})
                 setToken(data.token)
             }).catch(console.error)
         }
