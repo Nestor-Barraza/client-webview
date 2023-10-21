@@ -82,6 +82,7 @@ export const RoomProvider: React.FunctionComponent = ({ children }) => {
         const setupMediaStream = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                console.log('aquí está', {stream})
                 setStream(stream);
             } catch (error) {
                 console.error(error);
